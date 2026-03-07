@@ -50,16 +50,22 @@ class Countdown(BasePlugin):
 
         day_count = (countdown_date.date() - current_time.date()).days
 
-        days = abs(day_count)
-        if day_count > 0:
-            text = _('{0} Day Left') if days == 1 else _('{0} Days Left')
+        if day_count == 0:
+            before_label = ""
+            days = title
+            title = ""
+            after_label = ""
         else:
-            text = _('{0} Day Passed') if days == 1 else _('{0} Days Passed')
+            days = abs(day_count)
+            if day_count > 0:
+                text = _('{0} Day Left') if days == 1 else _('{0} Days Left')
+            else:
+                text = _('{0} Day Passed') if days == 1 else _('{0} Days Passed')
 
-        values = text.split("{0}")
+            values = text.split("{0}")
 
-        before_label = values[0]
-        after_label = values[1]
+            before_label = values[0]
+            after_label = values[1]
 
         date_format = "%-d %B"
         if countdown_date.date().year != current_time.date().year:
