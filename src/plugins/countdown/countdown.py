@@ -61,7 +61,9 @@ class Countdown(BasePlugin):
         before_label = values[0]
         after_label = values[1]
 
-        date_format = "%-d %B %Y"
+        date_format = "%-d %B"
+        if countdown_date.date().year != current_time.date().year:
+            date_format += " %Y"
 
         template_params = {
             "title": title,
