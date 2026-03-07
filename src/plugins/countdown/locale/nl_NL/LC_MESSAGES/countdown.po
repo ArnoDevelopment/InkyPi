@@ -1,0 +1,17 @@
+# Dutch translation for Countdown plugin
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: nl\n"
+
+msgid "{0} Days Left"
+msgstr "Nog {0} Dagen"
+
+msgid "{0} Day Left"
+msgstr "Nog {0} Dag"
+
+msgid "{0} Days Passed"
+msgstr "{0} Dagen Geleden"
+
+msgid "{0} Day Passed"
+msgstr "{0} Dag Geleden"
