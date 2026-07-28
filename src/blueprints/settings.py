@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, render_template, Response
 from utils.time_utils import calculate_seconds
+from utils.app_utils import resolve_path
 from datetime import datetime, timedelta
 import os
 import pytz
@@ -30,6 +31,28 @@ def settings_page():
     device_config = current_app.config['DEVICE_CONFIG']
     timezones = sorted(pytz.all_timezones_set)
     return render_template('settings.html', device_settings=device_config.get_config(), timezones = timezones)
+
+
+@settings_bp.route('/saved_images')
+def saved_images():
+    """Return a list of saved images in the static/images/saved folder."""
+    try:
+        saved_dir = resolve_path(os.path.join('static', 'images', 'saved'))
+        if not os.path.isdir(saved_dir):
+            return jsonify([])
+
+        files = []
+        for name in os.listdir(saved_dir):
+            if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.heif', '.heic')):
+                files.append({
+                    'name': name,
+                    'url': f"{request.script_root}/static/images/saved/{name}",
+                    'path': os.path.join(saved_dir, name)
+                })
+        return jsonify(files)
+    except Exception as e:
+        logger.exception(f"Error listing saved images: {e}")
+        return jsonify([]), 500
 
 @settings_bp.route('/save_settings', methods=['POST'])
 def save_settings():

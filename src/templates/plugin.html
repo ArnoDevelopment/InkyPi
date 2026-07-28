@@ -215,6 +215,79 @@
             }
         }
 
+        // Load saved images from the server and render a selectable gallery
+        async function loadSavedImages(){
+            try{
+                const resp = await fetch('/saved_images');
+                if (!resp.ok) return;
+                const imgs = await resp.json();
+                if (!imgs || imgs.length === 0) return;
+
+                const hiddenFileInput = document.getElementById('hiddenFileInput');
+                if (!hiddenFileInput) return;
+
+                const container = document.createElement('div');
+                container.className = 'form-group';
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.textContent = 'Or choose existing background:';
+                container.appendChild(label);
+
+                const gallery = document.createElement('div');
+                gallery.style.display = 'flex';
+                gallery.style.gap = '8px';
+                gallery.style.flexWrap = 'wrap';
+
+                imgs.forEach(img => {
+                    const el = document.createElement('img');
+                    el.src = img.url;
+                    el.alt = img.name;
+                    el.title = img.name;
+                    el.style.width = '96px';
+                    el.style.height = '72px';
+                    el.style.objectFit = 'cover';
+                    el.style.cursor = 'pointer';
+                    el.style.border = '2px solid transparent';
+                    el.onclick = () => {
+                        // clear file input
+                        const fileInput = document.getElementById('imageUpload');
+                        if (fileInput) fileInput.value = '';
+
+                        // mark selection visually
+                        gallery.querySelectorAll('img').forEach(i=> i.style.border='2px solid transparent');
+                        el.style.border = '2px solid #007AFF';
+
+                        // create or update hidden input
+                        let hidden = document.getElementById('hidden-file-name');
+                        if (!hidden) {
+                            hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = 'backgroundImageFile';
+                            hidden.id = 'hidden-file-name';
+                            hidden.setAttribute('delete-on-submit', '');
+                            hiddenFileInput.appendChild(hidden);
+                        }
+                        // prefer absolute path when available so server-side rendering uses local file
+                        hidden.value = img.path || img.url;
+
+                        // update filename UI
+                        const fileNameText = document.getElementById('fileNameText');
+                        const fileNameDisplay = document.getElementById('fileName');
+                        const uploadButtonLabel = document.getElementById('uploadButtonLabel');
+                        if (fileNameText) fileNameText.textContent = img.name;
+                        if (fileNameDisplay) fileNameDisplay.style.display = 'flex';
+                        if (uploadButtonLabel) uploadButtonLabel.style.display = 'none';
+                    };
+                    gallery.appendChild(el);
+                });
+
+                container.appendChild(gallery);
+                hiddenFileInput.parentNode.insertBefore(container, hiddenFileInput.nextSibling);
+            }catch(e){
+                console.warn('Could not load saved images', e);
+            }
+        }
+
         // populate form values from plugin settings
         document.addEventListener('DOMContentLoaded', () => {
             if (!styleSettings){
@@ -284,6 +357,9 @@
             }
 
             // Setup interactive refresh settings for edit mode (removed - now handled in openModal)
+            
+            // Load saved images gallery
+            loadSavedImages();
         });
     </script>
 </head>
