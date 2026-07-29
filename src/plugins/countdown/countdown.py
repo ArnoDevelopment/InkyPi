@@ -53,6 +53,7 @@ class Countdown(BasePlugin):
         # gather per-item fields
         titles_list = _get_list('titles') or _get_list('title')
         textcolors_list = _get_list('textColors') or _get_list('textColor')
+        background_colors_list = _get_list('backgroundColors') or _get_list('backgroundColor')
 
         # parse provided dates into normalized list
         raw_dates = []
@@ -175,7 +176,7 @@ class Countdown(BasePlugin):
                     return value_list[idx]
                 return fallback
             if value_list is not None:
-                return value_list if idx == 0 or idx is None else fallback
+                return value_list
             return fallback
 
         # selected title: per-item titles list or legacy single title
@@ -186,6 +187,7 @@ class Countdown(BasePlugin):
 
         # selected text color
         sel_text_color = _pick_per_item_value(textcolors_list, idx, None)
+        sel_background_color = _pick_per_item_value(background_colors_list, idx, None)
 
         # if a per-date background was provided, set it into plugin settings so template picks it up
         plugin_settings = dict(settings) if settings is not None else {}
@@ -193,6 +195,9 @@ class Countdown(BasePlugin):
         if chosen_bg:
             plugin_settings['backgroundImageFile'] = chosen_bg
             plugin_settings['backgroundOption'] = 'image'
+        elif sel_background_color:
+            plugin_settings['backgroundColor'] = sel_background_color
+            plugin_settings['backgroundOption'] = 'color'
         # set per-item text color if available
         if sel_text_color:
             plugin_settings['textColor'] = sel_text_color

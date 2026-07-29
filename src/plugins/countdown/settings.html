@@ -58,15 +58,73 @@
 
         const styleGroup = document.createElement('div');
         styleGroup.className = 'form-group';
-        const styleLabel = document.createElement('label');
-        styleLabel.className = 'form-label';
-        styleLabel.textContent = 'Style';
+
+        const backgroundLabel = document.createElement('label');
+        backgroundLabel.className = 'form-label';
+        backgroundLabel.textContent = 'Background:';
+
+        const backgroundOptionName = `backgroundOption-${Math.random().toString(36).slice(2)}`;
+        container.dataset.backgroundOptionName = backgroundOptionName;
+
+        const backgroundOptionColor = document.createElement('input');
+        backgroundOptionColor.type = 'radio';
+        backgroundOptionColor.name = backgroundOptionName;
+        backgroundOptionColor.value = 'color';
+        backgroundOptionColor.checked = !data.background;
+        backgroundOptionColor.className = 'style-radio';
+
+        const backgroundOptionColorLabel = document.createElement('label');
+        backgroundOptionColorLabel.className = 'form-label';
+        backgroundOptionColorLabel.textContent = 'Color';
+        backgroundOptionColorLabel.prepend(backgroundOptionColor);
+
+        const backgroundColorInput = document.createElement('input');
+        backgroundColorInput.type = 'color';
+        backgroundColorInput.name = 'backgroundColors[]';
+        backgroundColorInput.className = 'color-picker';
+        backgroundColorInput.value = data.backgroundColor || '#ffffff';
+        backgroundColorInput.onchange = () => {
+            backgroundOptionColor.checked = true;
+            if (hiddenSelectionInput) {
+                hiddenSelectionInput.remove();
+                hiddenSelectionInput = null;
+            }
+            container.querySelectorAll('input[type=hidden][name="backgroundImageFile[]"]').forEach(input => input.remove());
+        };
+
+        const backgroundOptionImage = document.createElement('input');
+        backgroundOptionImage.type = 'radio';
+        backgroundOptionImage.name = backgroundOptionName;
+        backgroundOptionImage.value = 'image';
+        backgroundOptionImage.checked = Boolean(data.background);
+        backgroundOptionImage.className = 'style-radio';
+
+        const backgroundOptionImageLabel = document.createElement('label');
+        backgroundOptionImageLabel.className = 'form-label';
+        backgroundOptionImageLabel.textContent = 'Image';
+        backgroundOptionImageLabel.prepend(backgroundOptionImage);
+
+        const textColorId = `textColor-${Math.random().toString(36).slice(2)}`;
+        const textColorLabel = document.createElement('label');
+        textColorLabel.className = 'form-label';
+        textColorLabel.setAttribute('for', textColorId);
+        textColorLabel.textContent = 'Text color';
 
         const textColorInput = document.createElement('input');
         textColorInput.type = 'color';
+        textColorInput.id = textColorId;
         textColorInput.name = 'textColors[]';
         textColorInput.className = 'color-picker';
         textColorInput.value = data.textColor || '#000000';
+
+        const backgroundSelectorColor = document.createElement('div');
+        backgroundSelectorColor.className = 'form-group nowrap';
+        backgroundSelectorColor.appendChild(backgroundOptionColorLabel);
+        backgroundSelectorColor.appendChild(backgroundColorInput);
+
+        const backgroundSelectorImage = document.createElement('div');
+        backgroundSelectorImage.className = 'form-group nowrap';
+        backgroundSelectorImage.appendChild(backgroundOptionImageLabel);
 
         const fileInputId = `backgroundImageFile-${Math.random().toString(36).slice(2)}`;
         const fileInput = document.createElement('input');
@@ -78,9 +136,12 @@
         fileInput.setAttribute('clear-on-submit', '');
 
         const fileUploadLabel = document.createElement('label');
-        fileUploadLabel.className = 'file-upload-label';
+        fileUploadLabel.className = 'form-input file-upload-label';
         fileUploadLabel.setAttribute('for', fileInputId);
-        fileUploadLabel.textContent = 'Upload Background';
+        fileUploadLabel.textContent = 'Upload Image';
+
+        backgroundSelectorImage.appendChild(fileUploadLabel);
+        backgroundSelectorImage.appendChild(fileInput);
 
         const fileNameSpan = document.createElement('span');
         fileNameSpan.className = 'file-name-text';
@@ -113,6 +174,7 @@
         if (data.background) {
             fileNameContainer.style.display = 'flex';
         }
+        backgroundSelectorImage.appendChild(fileNameContainer);
 
         if (data.background) {
             setHiddenBackgroundValue(data.background);
@@ -132,6 +194,7 @@
                 selectedImg.classList.remove('selected');
                 selectedImg.style.border = '2px solid transparent';
             }
+            backgroundOptionColor.checked = true;
         };
 
         fileInput.onchange = (e) => {
@@ -149,9 +212,11 @@
                     selectedImg.classList.remove('selected');
                     selectedImg.style.border = '2px solid transparent';
                 }
+                backgroundOptionImage.checked = true;
             } else {
                 fileNameContainer.style.display = 'none';
                 fileNameSpan.textContent = '';
+                backgroundOptionColor.checked = true;
             }
         };
 
@@ -163,12 +228,16 @@
         galleryContainer.className = 'existing-background-gallery';
         galleryContainer.style.marginTop = '8px';
 
-        styleGroup.appendChild(styleLabel);
-        styleGroup.appendChild(textColorInput);
-        styleGroup.appendChild(fileUploadLabel);
-        styleGroup.appendChild(fileInput);
-        styleGroup.appendChild(fileNameContainer);
+        styleGroup.appendChild(backgroundLabel);
+        styleGroup.appendChild(backgroundSelectorColor);
+        styleGroup.appendChild(backgroundSelectorImage);
         styleGroup.appendChild(galleryContainer);
+
+        const textColorGroup = document.createElement('div');
+        textColorGroup.className = 'form-group';
+        textColorGroup.appendChild(textColorLabel);
+        textColorGroup.appendChild(textColorInput);
+        styleGroup.appendChild(textColorGroup);
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -192,11 +261,13 @@
         const titles = getPluginList('titles') || [];
         const dates = getPluginList('dates') || [];
         const textColors = getPluginList('textColors') || [];
+        const backgroundColors = getPluginList('backgroundColors') || [];
         const backgrounds = getPluginList('backgroundImageFile') || getPluginList('dateBackgrounds') || [];
 
         const data = {
             title: Array.isArray(titles) ? (titles[idx] || '') : (titles || ''),
             date: Array.isArray(dates) ? (dates[idx] || '') : (dates || ''),
+            backgroundColor: Array.isArray(backgroundColors) ? (backgroundColors[idx] || '#ffffff') : (backgroundColors || '#ffffff'),
             textColor: Array.isArray(textColors) ? (textColors[idx] || '#000000') : (textColors || '#000000'),
             background: Array.isArray(backgrounds) ? (backgrounds[idx] || '') : (backgrounds || '')
         };
@@ -284,6 +355,14 @@
                     itemContainer.appendChild(hiddenInput);
                 }
                 hiddenInput.value = img.path || img.url;
+
+                const backgroundOptionName = itemContainer.dataset.backgroundOptionName;
+                if (backgroundOptionName) {
+                    const backgroundImageRadio = itemContainer.querySelector(`input[name="${backgroundOptionName}"][value="image"]`);
+                    if (backgroundImageRadio) {
+                        backgroundImageRadio.checked = true;
+                    }
+                }
             };
             gallery.appendChild(el);
         });
@@ -301,6 +380,7 @@
             const dates = getPluginList('dates') || (pluginSettings && pluginSettings.date ? [pluginSettings.date] : null);
             const titles = getPluginList('titles') || (pluginSettings && pluginSettings.title ? [pluginSettings.title] : null);
             const textColors = getPluginList('textColors') || (pluginSettings && pluginSettings.textColor ? [pluginSettings.textColor] : null);
+            const backgroundColors = getPluginList('backgroundColors') || (pluginSettings && pluginSettings.backgroundColor ? [pluginSettings.backgroundColor] : null);
             const backgrounds = getPluginList('backgroundImageFile') || getPluginList('dateBackgrounds') || (pluginSettings && pluginSettings.backgroundImageFile ? [pluginSettings.backgroundImageFile] : null);
 
             let count = 0;
