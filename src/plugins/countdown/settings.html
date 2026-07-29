@@ -1,12 +1,4 @@
 <div class="form-group">
-    <div class="form-group">
-        <label for="title" class="form-label">Title</label>
-        <input type="text" id="title" name="title" placeholder="Type something..." required class="form-input">
-    </div>
-    <div class="form-group">
-        <label for="date" class="form-label">Date</label>
-        <input type="date" id="date" name="date" class="form-input" />
-    </div>
     <label for="language" class="form-label">Language:</label>
     <select id="language" name="language" class="form-input">
         {% for code, name in supported_languages.items() %}
@@ -14,13 +6,312 @@
         {% endfor %}
     </select>
 </div>
+<div class="form-group">
+    <label for="items" class="form-label">Countdown Dates:</label>
+    <div id="itemsContainer"></div>
+</div>
+<div class="form-group">
+    <button type="button" id="addItemBtn" class="action-button">Add Date</button>
+</div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function getPluginList(key) {
+        if (!pluginSettings) return null;
+        if (pluginSettings[key]) return pluginSettings[key];
+        if (pluginSettings[`${key}[]`]) return pluginSettings[`${key}[]`];
+        return null;
+    }
+
+    function createItem(data = {}) {
+        const container = document.createElement('div');
+        container.className = 'date-item';
+        container.style.border = '1px solid #ddd';
+        container.style.padding = '8px';
+        container.style.marginBottom = '8px';
+
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'form-group';
+        const titleLabel = document.createElement('label');
+        titleLabel.className = 'form-label';
+        titleLabel.textContent = 'Title';
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.name = 'titles[]';
+        titleInput.className = 'form-input';
+        titleInput.value = data.title || '';
+        titleGroup.appendChild(titleLabel);
+        titleGroup.appendChild(titleInput);
+
+        const dateGroup = document.createElement('div');
+        dateGroup.className = 'form-group';
+        const dateLabel = document.createElement('label');
+        dateLabel.className = 'form-label';
+        dateLabel.textContent = 'Date (YYYY-MM-DD or MM-DD)';
+        const dateInput = document.createElement('input');
+        dateInput.type = 'text';
+        dateInput.name = 'dates[]';
+        dateInput.className = 'form-input';
+        dateInput.placeholder = 'YYYY-MM-DD or MM-DD';
+        dateInput.value = data.date || '';
+        dateGroup.appendChild(dateLabel);
+        dateGroup.appendChild(dateInput);
+
+        const styleGroup = document.createElement('div');
+        styleGroup.className = 'form-group';
+        const styleLabel = document.createElement('label');
+        styleLabel.className = 'form-label';
+        styleLabel.textContent = 'Style';
+
+        const textColorInput = document.createElement('input');
+        textColorInput.type = 'color';
+        textColorInput.name = 'textColors[]';
+        textColorInput.className = 'color-picker';
+        textColorInput.value = data.textColor || '#000000';
+
+        const fileInputId = `backgroundImageFile-${Math.random().toString(36).slice(2)}`;
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = fileInputId;
+        fileInput.name = 'backgroundImageFile[]';
+        fileInput.accept = 'image/*';
+        fileInput.className = 'file-upload-input';
+        fileInput.setAttribute('clear-on-submit', '');
+
+        const fileUploadLabel = document.createElement('label');
+        fileUploadLabel.className = 'file-upload-label';
+        fileUploadLabel.setAttribute('for', fileInputId);
+        fileUploadLabel.textContent = 'Upload Background';
+
+        const fileNameSpan = document.createElement('span');
+        fileNameSpan.className = 'file-name-text';
+        if (data.background) fileNameSpan.textContent = data.background.split('/').pop();
+
+        const removeFileButton = document.createElement('button');
+        removeFileButton.type = 'button';
+        removeFileButton.className = 'remove-btn';
+        removeFileButton.textContent = 'X';
+
+        let hiddenSelectionInput = null;
+        const setHiddenBackgroundValue = (value) => {
+            if (!hiddenSelectionInput) {
+                hiddenSelectionInput = document.createElement('input');
+                hiddenSelectionInput.type = 'hidden';
+                hiddenSelectionInput.name = 'backgroundImageFile[]';
+                hiddenSelectionInput.setAttribute('delete-on-submit', '');
+                styleGroup.appendChild(hiddenSelectionInput);
+            }
+            hiddenSelectionInput.value = value;
+        };
+
+        const fileNameContainer = document.createElement('div');
+        fileNameContainer.appendChild(fileNameSpan);
+        fileNameContainer.appendChild(removeFileButton);
+        fileNameContainer.className = 'file-name';
+        fileNameContainer.style.display = 'none';
+        fileNameContainer.style.alignItems = 'center';
+        fileNameContainer.style.gap = '8px';
+        if (data.background) {
+            fileNameContainer.style.display = 'flex';
+        }
+
+        if (data.background) {
+            setHiddenBackgroundValue(data.background);
+        }
+
+        const clearBackgroundSelection = () => {
+            fileInput.value = '';
+            fileNameContainer.style.display = 'none';
+            fileNameSpan.textContent = '';
+            if (hiddenSelectionInput) {
+                hiddenSelectionInput.remove();
+                hiddenSelectionInput = null;
+            }
+            container.querySelectorAll('input[type=hidden][name="backgroundImageFile[]"]').forEach(input => input.remove());
+            const selectedImg = container.querySelector('.existing-background-gallery img.selected');
+            if (selectedImg) {
+                selectedImg.classList.remove('selected');
+                selectedImg.style.border = '2px solid transparent';
+            }
+        };
+
+        fileInput.onchange = (e) => {
+            const f = e.target.files[0];
+            if (f) {
+                fileNameSpan.textContent = f.name;
+                fileNameContainer.style.display = 'flex';
+                if (hiddenSelectionInput) {
+                    hiddenSelectionInput.remove();
+                    hiddenSelectionInput = null;
+                }
+                container.querySelectorAll('input[type=hidden][name="backgroundImageFile[]"]').forEach(input => input.remove());
+                const selectedImg = container.querySelector('.existing-background-gallery img.selected');
+                if (selectedImg) {
+                    selectedImg.classList.remove('selected');
+                    selectedImg.style.border = '2px solid transparent';
+                }
+            } else {
+                fileNameContainer.style.display = 'none';
+                fileNameSpan.textContent = '';
+            }
+        };
+
+        removeFileButton.onclick = () => {
+            clearBackgroundSelection();
+        };
+
+        const galleryContainer = document.createElement('div');
+        galleryContainer.className = 'existing-background-gallery';
+        galleryContainer.style.marginTop = '8px';
+
+        styleGroup.appendChild(styleLabel);
+        styleGroup.appendChild(textColorInput);
+        styleGroup.appendChild(fileUploadLabel);
+        styleGroup.appendChild(fileInput);
+        styleGroup.appendChild(fileNameContainer);
+        styleGroup.appendChild(galleryContainer);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'action-button';
+        removeBtn.style.marginTop = '8px';
+        removeBtn.textContent = 'Remove';
+        removeBtn.onclick = () => container.remove();
+
+        container.appendChild(titleGroup);
+        container.appendChild(dateGroup);
+        container.appendChild(styleGroup);
+        container.appendChild(removeBtn);
+
+        document.getElementById('itemsContainer').appendChild(container);
+        if (savedImagesLoaded) {
+            renderSavedImagesForItem(container);
+        }
+    }
+
+    function addItemFromData(idx) {
+        const titles = getPluginList('titles') || [];
+        const dates = getPluginList('dates') || [];
+        const textColors = getPluginList('textColors') || [];
+        const backgrounds = getPluginList('backgroundImageFile') || getPluginList('dateBackgrounds') || [];
+
+        const data = {
+            title: Array.isArray(titles) ? (titles[idx] || '') : (titles || ''),
+            date: Array.isArray(dates) ? (dates[idx] || '') : (dates || ''),
+            textColor: Array.isArray(textColors) ? (textColors[idx] || '#000000') : (textColors || '#000000'),
+            background: Array.isArray(backgrounds) ? (backgrounds[idx] || '') : (backgrounds || '')
+        };
+        createItem(data);
+    }
+
+    let savedImages = [];
+    let savedImagesLoaded = false;
+
+    async function loadSavedImagesForCountdownItems() {
+        if (savedImagesLoaded) {
+            document.querySelectorAll('.date-item').forEach(item => renderSavedImagesForItem(item));
+            return;
+        }
+
+        try {
+            const resp = await fetch('/saved_images');
+            if (!resp.ok) return;
+            const imgs = await resp.json();
+            if (!imgs || imgs.length === 0) return;
+            savedImages = imgs;
+            savedImagesLoaded = true;
+            document.querySelectorAll('.date-item').forEach(item => renderSavedImagesForItem(item));
+        } catch (e) {
+            console.warn('Could not load saved images', e);
+        }
+    }
+
+    function renderSavedImagesForItem(itemContainer) {
+        const galleryContainer = itemContainer.querySelector('.existing-background-gallery');
+        if (!galleryContainer || !savedImages.length) return;
+        galleryContainer.innerHTML = '';
+
+        const label = document.createElement('div');
+        label.className = 'form-label';
+        label.textContent = 'Or choose an existing background:';
+        galleryContainer.appendChild(label);
+
+        const gallery = document.createElement('div');
+        gallery.style.display = 'flex';
+        gallery.style.gap = '8px';
+        gallery.style.flexWrap = 'wrap';
+        gallery.style.marginTop = '8px';
+
+        const currentBackground = itemContainer.querySelector('input[type=hidden][name="backgroundImageFile[]"]')?.value;
+
+        savedImages.forEach(img => {
+            const el = document.createElement('img');
+            el.src = img.url;
+            el.alt = img.name;
+            el.title = img.name;
+            el.style.width = '96px';
+            el.style.height = '72px';
+            el.style.objectFit = 'cover';
+            el.style.cursor = 'pointer';
+            el.style.border = '2px solid transparent';
+            if (currentBackground && currentBackground === (img.path || img.url)) {
+                el.style.border = '2px solid #007AFF';
+                el.classList.add('selected');
+            }
+            el.onclick = () => {
+                itemContainer.querySelectorAll('.existing-background-gallery img').forEach(i => {
+                    i.style.border = '2px solid transparent';
+                    i.classList.remove('selected');
+                });
+                el.style.border = '2px solid #007AFF';
+                el.classList.add('selected');
+
+                const fileInput = itemContainer.querySelector('input[type=file]');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                const fileNameText = itemContainer.querySelector('.file-name-text');
+                const fileNameContainer = itemContainer.querySelector('.file-name');
+                if (fileNameText) fileNameText.textContent = img.name;
+                if (fileNameContainer) fileNameContainer.style.display = 'flex';
+
+                let hiddenInput = itemContainer.querySelector('input[type=hidden][name="backgroundImageFile[]"]');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'backgroundImageFile[]';
+                    hiddenInput.setAttribute('delete-on-submit', '');
+                    itemContainer.appendChild(hiddenInput);
+                }
+                hiddenInput.value = img.path || img.url;
+            };
+            gallery.appendChild(el);
+        });
+
+        galleryContainer.appendChild(gallery);
+    }
+
+    document.getElementById('addItemBtn').addEventListener('click', () => createItem());
+
+    document.addEventListener('DOMContentLoaded', async () => {
         if (loadPluginSettings) {
-            document.getElementById('title').value = pluginSettings.title || '';
-            document.getElementById('date').value = pluginSettings.date;
             document.getElementById('language').value = pluginSettings.language || 'en';
+
+            // populate items from existing pluginSettings; support legacy single fields
+            const dates = getPluginList('dates') || (pluginSettings && pluginSettings.date ? [pluginSettings.date] : null);
+            const titles = getPluginList('titles') || (pluginSettings && pluginSettings.title ? [pluginSettings.title] : null);
+            const textColors = getPluginList('textColors') || (pluginSettings && pluginSettings.textColor ? [pluginSettings.textColor] : null);
+            const backgrounds = getPluginList('backgroundImageFile') || getPluginList('dateBackgrounds') || (pluginSettings && pluginSettings.backgroundImageFile ? [pluginSettings.backgroundImageFile] : null);
+
+            let count = 0;
+            if (dates) count = Array.isArray(dates) ? dates.length : 1;
+            else if (titles) count = Array.isArray(titles) ? titles.length : 1;
+            else count = 1;
+
+            for (let i = 0; i < count; i++) {
+                addItemFromData(i);
+            }
+            await loadSavedImagesForCountdownItems();
         }
     });
 </script>
