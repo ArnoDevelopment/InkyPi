@@ -27,6 +27,13 @@
         <option value="metric">Metric (°C)</option>
         <option value="standard">Standard (K)</option>
     </select>
+
+    <label for="language" class="form-label">Language:</label>
+    <select id="language" name="language" class="form-input">
+        {% for code, name in supported_languages.items() %}
+            <option value="{{ code }}" {% if plugin_settings.language == code or (not plugin_settings.language and code == 'en') %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+    </select>
 </div>
 
 <div class="form-group" id="titleOptionWrapper">
@@ -204,6 +211,7 @@
             document.getElementById('longitude').value = pluginSettings.longitude;
 
             document.getElementById('units').value = pluginSettings.units;
+            document.getElementById('language').value = pluginSettings.language || 'en';
 
             document.getElementById('displayRefreshTime').checked = pluginSettings.displayRefreshTime;
             document.getElementById('displayRefreshTime').value = pluginSettings.displayRefreshTime;
@@ -253,6 +261,7 @@
             document.getElementById('moonPhase').checked = false;
 			document.getElementById('moonPhase').value = "false";
             document.getElementById('weatherTimeZone').value = "locationTimeZone";
+            document.getElementById('language').value = 'en';
         }
 
         document.getElementById('weatherProvider').value = weatherProvider;
