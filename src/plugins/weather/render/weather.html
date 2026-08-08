@@ -246,8 +246,8 @@
               },
               autoSkip: false,
               callback: function(value, index, values) {
-                if (index === values.length-1) return (units != "standard") ? displayMax + "°" : displayMax;
-                else if (index === 0) return (units != "standard") ? minTemp + "°" : minTemp;
+                if (index === values.length-1) return (units != "standard") ? Math.round(displayMax) + "°" : Math.round(displayMax);
+                else if (index === 0) return (units != "standard") ? Math.round(minTemp) + "°" : Math.round(minTemp);
                 else return '';
               }
             },
