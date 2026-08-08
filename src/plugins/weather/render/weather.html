@@ -100,9 +100,12 @@
 	const unit = isImperial ? "in" : "mm";
 	const threshold = isImperial ? 0.0035 : 0.09;
 	
-    // Find min and max temperatures
+    // Find min and max temperatures and add a small top padding to avoid clipping
     const minTemp = Math.min(...temperatures);
-    var maxTemp = Math.max(...temperatures);
+    const maxTemp = Math.max(...temperatures);
+    const tempRange = (maxTemp - minTemp) || 1;
+    const topPadding = Math.max(1, tempRange * 0.08); // at least 1 degree or ~8% of range
+    const displayMax = maxTemp + topPadding;
 	
     Chart.register({
       id: 'annotationRain',
@@ -243,14 +246,14 @@
               },
               autoSkip: false,
               callback: function(value, index, values) {
-                if (index === values.length-1) return (units != "standard") ? maxTemp + "°" : maxTemp;
+                if (index === values.length-1) return (units != "standard") ? displayMax + "°" : displayMax;
                 else if (index === 0) return (units != "standard") ? minTemp + "°" : minTemp;
                 else return '';
               }
             },
             grid: { display: false },
             min: minTemp,
-            max: maxTemp,
+            max: displayMax,
           },
           y1: {
             position: 'right',
@@ -289,8 +292,8 @@
     chart.update();
 
     // Now, after the chart is created, we can access the scales
-    const gradientStart = chart.scales['y'].getPixelForValue(maxTemp); // Max temperature
-    const gradientEnd = chart.scales['y'].getPixelForValue(minTemp);   // Min temperature
+    const gradientStart = chart.scales['y'].getPixelForValue(displayMax); // Max (padded) temperature
+    const gradientEnd = chart.scales['y'].getPixelForValue(minTemp);      // Min temperature
 
     // Create gradient based on y-axis values
     const tempGradient = ctx.createLinearGradient(0, gradientStart, 0, gradientEnd+10);
