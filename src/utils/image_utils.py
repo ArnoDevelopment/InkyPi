@@ -136,6 +136,8 @@ def take_screenshot(target, dimensions, timeout_ms=None):
             "--headless",
             f"--screenshot={img_file_path}",
             f"--window-size={dimensions[0]},{dimensions[1]}",
+            "--force-device-scale-factor=1",
+            "--device-scale-factor=1",
             "--disable-dev-shm-usage",
             "--disable-gpu",
             "--use-gl=swiftshader",
