@@ -2,6 +2,10 @@ from plugins.base_plugin.base_plugin import BasePlugin
 from PIL import Image
 import gettext
 import os
+try:
+    from babel.dates import format_date
+except Exception:
+    format_date = None
 import requests
 import logging
 from datetime import datetime, timedelta, timezone, date
@@ -100,7 +104,8 @@ class Weather(BasePlugin):
 
         try:
             translate = self._get_translation(language)
-            translations = self._build_i18n(translate)
+            locale_code = self._resolve_locale_code(language)
+            translations = self._build_i18n(translate, locale_code)
 
             if weather_provider == "OpenWeatherMap":
                 api_key = device_config.load_env_key("OPEN_WEATHER_MAP_SECRET")
@@ -326,7 +331,7 @@ class Weather(BasePlugin):
 
             # --- date & temps ---
             dt = datetime.fromtimestamp(day["dt"], tz=timezone.utc).astimezone(tz)
-            day_label = self._localize_short_day(dt.strftime("%a"), translations)
+            day_label = self._localize_short_day(dt, translations)
 
             forecast.append(
                 {
@@ -357,7 +362,7 @@ class Weather(BasePlugin):
 
         for i in range(0, len(times)): 
             dt = datetime.fromisoformat(times[i]).replace(tzinfo=timezone.utc).astimezone(tz)
-            day_label = self._localize_short_day(dt.strftime("%a"), translations)
+            day_label = self._localize_short_day(dt, translations)
 
             code = weather_codes[i] if i < len(weather_codes) else 0
             weather_icon = self.map_weather_code_to_icon(code, is_day=1)
@@ -802,10 +807,30 @@ class Weather(BasePlugin):
 
         return dt.strftime(fmt).lstrip("0")
 
-    def _localize_short_day(self, day_str, translations):
+    def _localize_short_day(self, dt_or_str, translations):
+        """Return a short weekday label. Accepts a datetime or short-name string.
+        Uses Babel when available and a locale_code is provided; falls back to translations mapping."""
+        locale_code = translations.get('locale_code')
+        if format_date and locale_code and isinstance(dt_or_str, datetime):
+            try:
+                # 'EEE' -> abbreviated weekday name in locale
+                return format_date(dt_or_str.date(), format='EEE', locale=locale_code)
+            except Exception:
+                pass
+        # Fallback: accept a provided short name or derive from datetime
+        if isinstance(dt_or_str, datetime):
+            day_str = dt_or_str.strftime("%a")
+        else:
+            day_str = dt_or_str
         return translations.get('day_names_short', {}).get(day_str, day_str)
 
     def _localize_long_date(self, dt, translations):
+        locale_code = translations.get('locale_code')
+        if format_date and locale_code:
+            try:
+                return format_date(dt.date(), format="EEEE, d MMMM", locale=locale_code)
+            except Exception:
+                pass
         day = translations.get('day_names_full', {}).get(dt.strftime("%A"), dt.strftime("%A"))
         month = translations.get('month_names', {}).get(dt.strftime("%B"), dt.strftime("%B"))
         return f"{day}, {month} {dt.day}"
@@ -827,12 +852,24 @@ class Weather(BasePlugin):
         except Exception:
             return gettext.NullTranslations()
 
-    def _build_i18n(self, translate):
+    def _resolve_locale_code(self, language_setting: str) -> str:
+        """Resolve a language/region setting to a locale code suitable for formatting.
+        Examples: 'nl' -> 'nl_NL', 'en' -> 'en_US', 'nl_NL' -> 'nl_NL'."""
+        if not language_setting:
+            return 'en_US'
+        if '_' in language_setting or '-' in language_setting:
+            return language_setting.replace('-', '_')
+        mapping = {
+            'en': 'en_US',
+            'nl': 'nl_NL'
+        }
+        return mapping.get(language_setting, f"{language_setting}_{language_setting.upper()}")
+
+    def _build_i18n(self, translate, locale_code='en_US'):
         day_names_full = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         day_names_short = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         month_names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-
-        return {
+        out = {
             'feels_like': translate.gettext('Feels Like'),
             'sunrise': translate.gettext('Sunrise'),
             'sunset': translate.gettext('Sunset'),
@@ -864,6 +901,8 @@ class Weather(BasePlugin):
             'month_names': {month: translate.gettext(month) for month in month_names},
             'air_quality_scale': self._air_quality_scale(translate)
         }
+        out['locale_code'] = locale_code
+        return out
 
     def _air_quality_scale(self, translate):
         return [
