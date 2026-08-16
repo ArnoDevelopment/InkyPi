@@ -170,7 +170,7 @@ class Weather(BasePlugin):
             if current_icon.endswith('n'):
                 current_icon = current_icon.replace("n", "d")
         data = {
-            "current_date": self._localize_long_date(dt, translations),
+            "current_date": self._localize_long_date(dt, translations).capitalize(),
             "current_day_icon": self.get_plugin_dir(f'icons/{current_icon}.png'),
             "current_temperature": str(round(current.get("temp"))),
             "feels_like": str(round(current.get("feels_like"))),
