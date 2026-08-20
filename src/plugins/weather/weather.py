@@ -195,7 +195,7 @@ class Weather(BasePlugin):
         temperature_conversion = 273.15 if units == "standard" else 0.
 
         data = {
-            "current_date": self._localize_long_date(dt, translations),
+            "current_date": self._localize_long_date(dt, translations).capitalize(),
             "current_day_icon": self.get_plugin_dir(f'icons/{current_icon}.png'),
             "current_temperature": str(round(current.get("temperature", 0) + temperature_conversion)),
             "feels_like": str(round(current.get("apparent_temperature", current.get("temperature", 0)) + temperature_conversion)),
