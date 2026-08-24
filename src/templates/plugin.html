@@ -236,18 +236,26 @@
                 const gallery = document.createElement('div');
                 gallery.style.display = 'flex';
                 gallery.style.gap = '8px';
-                gallery.style.flexWrap = 'wrap';
+                gallery.style.flexWrap = 'nowrap';
+                gallery.style.overflowX = 'auto';
+                gallery.style.overflowY = 'hidden';
+                gallery.style.scrollBehavior = 'smooth';
+                gallery.style.paddingBottom = '4px';
 
                 imgs.forEach(img => {
                     const el = document.createElement('img');
                     el.src = img.url;
                     el.alt = img.name;
                     el.title = img.name;
-                    el.style.width = '96px';
-                    el.style.height = '72px';
+                    el.style.width = 'clamp(52px, 22vw, 96px)';
+                    el.style.height = 'clamp(38px, 16vw, 72px)';
                     el.style.objectFit = 'cover';
                     el.style.cursor = 'pointer';
                     el.style.border = '2px solid transparent';
+                    el.style.maxWidth = '100%';
+                    el.style.flex = '0 0 auto';
+                    el.style.boxSizing = 'border-box';
+                    el.style.minWidth = '0';
                     el.onclick = () => {
                         // clear file input
                         const fileInput = document.getElementById('imageUpload');

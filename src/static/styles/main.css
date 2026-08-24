@@ -327,6 +327,60 @@ body {
     box-shadow: 0 0 3px var(--input-focus);
 }
 
+.date-item {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#itemsContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.existing-background-gallery {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 0 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.existing-background-gallery > div {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: 4px 0;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.existing-background-gallery img {
+    flex: 0 0 auto;
+    display: block;
+    width: clamp(52px, 22vw, 96px);
+    height: clamp(38px, 16vw, 72px);
+    object-fit: cover;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
 /* Textarea styling */
 textarea {
     background-color: var(--input-bg);

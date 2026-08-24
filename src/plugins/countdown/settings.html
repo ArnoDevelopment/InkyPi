@@ -28,6 +28,9 @@
         container.style.border = '1px solid #ddd';
         container.style.padding = '8px';
         container.style.marginBottom = '8px';
+        container.style.maxWidth = '100%';
+        container.style.boxSizing = 'border-box';
+        container.style.overflow = 'hidden';
 
         const titleGroup = document.createElement('div');
         titleGroup.className = 'form-group';
@@ -309,8 +312,12 @@
         const gallery = document.createElement('div');
         gallery.style.display = 'flex';
         gallery.style.gap = '8px';
-        gallery.style.flexWrap = 'wrap';
+        gallery.style.flexWrap = 'nowrap';
         gallery.style.marginTop = '8px';
+        gallery.style.overflowX = 'auto';
+        gallery.style.overflowY = 'hidden';
+        gallery.style.scrollBehavior = 'smooth';
+        gallery.style.paddingBottom = '4px';
 
         const currentBackground = itemContainer.querySelector('input[type=hidden][name="backgroundImageFile[]"]')?.value;
 
@@ -319,11 +326,15 @@
             el.src = img.url;
             el.alt = img.name;
             el.title = img.name;
-            el.style.width = '96px';
-            el.style.height = '72px';
+            el.style.width = 'clamp(52px, 22vw, 96px)';
+            el.style.height = 'clamp(38px, 16vw, 72px)';
+            el.style.maxWidth = '100%';
+            el.style.flex = '0 0 auto';
             el.style.objectFit = 'cover';
             el.style.cursor = 'pointer';
             el.style.border = '2px solid transparent';
+            el.style.boxSizing = 'border-box';
+            el.style.minWidth = '0';
             if (currentBackground && currentBackground === (img.path || img.url)) {
                 el.style.border = '2px solid #007AFF';
                 el.classList.add('selected');
