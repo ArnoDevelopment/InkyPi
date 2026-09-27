@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="countdown-container">
-    <div class="countdown-wrapper" >
+    <div class="countdown-wrapper" style="--countdown-text-color: {{ plugin_settings.textColor }}; --countdown-outline-color: {{ text_outline_color }};">
         <h1 class="title">{{title}}</h1>
         <p class="subtitle">{{date}}</p>
         <div class="label">{{before_label}}</div>

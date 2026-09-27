@@ -12,6 +12,25 @@ import locale
 import os
 
 logger = logging.getLogger(__name__)
+
+
+def _get_text_outline_color(text_color):
+    if not text_color:
+        return "#1a1a1a"
+
+    hex_color = str(text_color).lstrip("#")
+    if len(hex_color) == 3:
+        hex_color = "".join(ch * 2 for ch in hex_color)
+
+    if len(hex_color) != 6:
+        return "#1a1a1a"
+
+    r, g, b = [int(hex_color[i:i + 2], 16) for i in (0, 2, 4)]
+    luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+    return "#1a1a1a" if luminance > 0.55 else "#f0f0f0"
+
+
 class Countdown(BasePlugin):
     def generate_settings_template(self):
         template_params = super().generate_settings_template()
@@ -188,6 +207,9 @@ class Countdown(BasePlugin):
         # selected text color
         sel_text_color = _pick_per_item_value(textcolors_list, idx, None)
         sel_background_color = _pick_per_item_value(background_colors_list, idx, None)
+        text_outline_color = _get_text_outline_color(
+            sel_text_color or settings.get('textColor') or "#000000"
+        )
 
         # if a per-date background was provided, set it into plugin settings so template picks it up
         plugin_settings = dict(settings) if settings is not None else {}
@@ -246,6 +268,7 @@ class Countdown(BasePlugin):
             "day_count": days,
             "before_label": before_label,
             "after_label": after_label,
+            "text_outline_color": text_outline_color,
             "plugin_settings": plugin_settings
         }
 

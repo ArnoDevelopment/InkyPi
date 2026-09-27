@@ -3,6 +3,7 @@
   align-items: center; 
   justify-content: center;
   font-family: "Jost";
+  font-weight: 700;
   height: 100%;
   width: 100%;
 }
@@ -11,6 +12,19 @@
   text-align: center;
   margin: 0;
   padding: 0;
+  color: var(--countdown-text-color, #000000);
+}
+.title, .subtitle, .day_count, .label {
+  color: var(--countdown-text-color, #000000);
+  -webkit-text-stroke: 1px var(--countdown-outline-color, #000000);
+  text-shadow:
+    -1px 0 0 var(--countdown-outline-color, #000000),
+     1px 0 0 var(--countdown-outline-color, #000000),
+     0 -1px 0 var(--countdown-outline-color, #000000),
+     0 1px 0 var(--countdown-outline-color, #000000),
+    -1px -1px 0 var(--countdown-outline-color, #000000),
+     1px 1px 0 var(--countdown-outline-color, #000000);
+  paint-order: stroke fill;
 }
 .title {
   font-size: min(11dvw, 11dvh);
